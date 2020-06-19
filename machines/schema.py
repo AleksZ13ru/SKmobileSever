@@ -1,9 +1,11 @@
 import graphene
 from graphene_django import DjangoObjectType
+from django.utils import timezone
 
 from .models import Location, Category, Machine, Value, Day, ToDoList, CrashList
 from .type_scheme.stop_time_list_type import StopTimeListType, StopTimeList
 from .type_scheme.todo_list_type import ToDoListType, ToDoList
+from .type_scheme.crash_list_type import CrashListType, CrashList
 from .type_scheme.service_name_type import ServiceNameType, ServiceName
 
 
@@ -39,10 +41,12 @@ class DayType(DjangoObjectType):
         model = Day
         # fields = ('id', 'day', '')
 
+    total_stop_time_list_in_machine = graphene.Float(pk=graphene.Int())
+
     values_in_machine = graphene.List(ValueType, pk=graphene.Int())
     stop_time_lists_in_machine = graphene.List(StopTimeListType, pk=graphene.Int())
-    total_stop_time_list_in_machine = graphene.Float(pk=graphene.Int())
     todo_in_machine = graphene.List(ToDoListType, pk=graphene.Int())
+    crash_list_in_machine = graphene.List(CrashListType, pk=graphene.Int())
 
     def resolve_values_in_machine(self, info, **kwargs):
         pk = kwargs.get('pk')
@@ -66,6 +70,13 @@ class DayType(DjangoObjectType):
         # if todo is not None:
         #     return todo
         return ToDoList.objects.filter(machine_id=pk, day_start=self)
+
+    def resolve_crash_list_in_machine(self, info, **kwargs):
+        pk = kwargs.get('pk')
+        # todo = ToDoList.objects.filter(machine_id=pk, day_start=self)
+        # if todo is not None:
+        #     return todo
+        return CrashList.objects.filter(machine_id=pk, day_start=self)
 
 
 class MachineType(DjangoObjectType):
@@ -104,6 +115,74 @@ class LocationType(DjangoObjectType):
 class CategoryType(DjangoObjectType):
     class Meta:
         model = Category
+
+
+class AddCrashListMutation(graphene.Mutation):
+    class Arguments:
+        machine_id = graphene.Int()
+        # dt_start = graphene.DateTime()
+        services_id = graphene.List(graphene.Int)
+        text = graphene.String()
+
+    crash = graphene.Field(CrashListType)
+
+    def mutate(self, info, machine_id, services_id, text):
+        # {"machineId": 1, "dtStart": "2020-05-29T00:00:00Z", "servicesID": [1, 2], "text": "Hello"}
+        # if dt_start is None:
+        dt_start = timezone.now()
+        day = Day.objects.get_or_create(day=dt_start.date())[0]
+
+        services = []
+        for service_id in services_id:
+            service = ServiceName.objects.get(pk=service_id)
+            services.append(service)
+
+        crash = CrashList.objects.create(
+            machine_id=machine_id,
+            day_start=day,
+            time_start=dt_start.time(),
+            text=text
+        )
+        crash.services.set(services)
+        # crash.text = text
+        crash.save()
+        return AddCrashListMutation(crash=crash)
+
+
+class AddStopTimeListMutation(graphene.Mutation):
+    class Arguments:
+        machine_id = graphene.Int()
+        services_id = graphene.List(graphene.Int)
+        dt_start = graphene.DateTime()
+        dt_stop = graphene.DateTime()
+        text = graphene.String()
+
+    stop_time = graphene.Field(StopTimeListType)
+
+    def mutate(self, info, machine_id, services_id, dt_start, dt_stop, text):
+        # {"machineId": 1, "dtStart": "2020-05-29T00:00:00Z", "servicesID": [1, 2], "text": "Hello"}
+        # if dt_start is None:
+        # dt_start = timezone.now()
+        day_start = Day.objects.get_or_create(day=dt_start.date())[0]
+        day_stop = Day.objects.get_or_create(day=dt_stop.date())[0]
+
+        services = []
+        for service_id in services_id:
+            service = ServiceName.objects.get(pk=service_id)
+            services.append(service)
+
+        stop_time = StopTimeList.objects.create(
+            machine_id=machine_id,
+            day_start=day_start,
+            day_stop=day_stop,
+            time_start=dt_start.time(),
+            time_stop=dt_stop.time(),
+            text=text
+        )
+        stop_time.services.set(services)
+        # crash.text = text
+        stop_time.save()
+        return AddStopTimeListMutation(stop_time=stop_time)
 
 
 class Query(object):
@@ -148,3 +227,8 @@ class Query(object):
     def resolve_stop_time_list(self, info, **kwargs):
         pk = kwargs.get('pk')
         return StopTimeList.objects.get(pk=pk)
+
+
+class Mutation(graphene.ObjectType):
+    add_crash = AddCrashListMutation.Field()
+    add_stop_time = AddStopTimeListMutation.Field()

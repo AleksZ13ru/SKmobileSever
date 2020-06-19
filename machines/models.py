@@ -73,8 +73,6 @@ class Machine(models.Model):
         return 0
 
 
-
-
 class Value(models.Model):
     class Meta:
         verbose_name = "Значение"
@@ -191,7 +189,7 @@ class StopTimeList(models.Model):
             d_stop = date(self.day_stop.day.year, self.day_stop.day.month, self.day_stop.day.day)
             t_stop = time(self.time_stop.hour, self.time_stop.minute)
             dt_stop = datetime.combine(d_stop, t_stop)
-        return (dt_stop - dt_start).total_seconds()/3600
+        return (dt_stop - dt_start).total_seconds() / 3600
 
     def __str__(self):
         day_stop = '?'

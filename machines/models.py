@@ -72,6 +72,10 @@ class Machine(models.Model):
             return value.create_kmv()
         return 0
 
+    def create_crash(self):
+        crash = CrashList.objects.filter(machine=self, day_stop=None)
+        return len(crash)
+
 
 class Value(models.Model):
     class Meta:

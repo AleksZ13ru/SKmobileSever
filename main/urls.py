@@ -18,6 +18,8 @@ from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
 from graphql.backend import GraphQLCoreBackend
+# from channels.routing import route_class
+# from graphql_ws.django_channels import GraphQLSubscriptionConsumer
 
 
 class CustomBackend(GraphQLCoreBackend):
@@ -25,9 +27,13 @@ class CustomBackend(GraphQLCoreBackend):
         super().__init__(executor)
         self.execute_params['allow_subscriptions'] = True
 
+
+# channel_routing = [
+#     route_class(GraphQLSubscriptionConsumer, path=r"^/subscriptions"),
+# ]
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('graphql/', csrf_exempt(GraphQLView.as_view(backend=CustomBackend(), graphiql=True))),
-
 
 ]

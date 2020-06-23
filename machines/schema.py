@@ -86,6 +86,7 @@ class MachineType(DjangoObjectType):
     # speed = graphene.Int()
     kmv = graphene.Float()
     days = graphene.List(DayType)
+    crash = graphene.Int()
 
     def resolve_days(self, info):
         result = Day.objects.all()
@@ -106,6 +107,12 @@ class MachineType(DjangoObjectType):
     def resolve_kmv(self, info):
         return self.create_kmv()
 
+    def create_crash(self):
+        return self.create_crash()
+
+    def resolve_crash(self, info):
+        return self.create_crash()
+
 
 class LocationType(DjangoObjectType):
     class Meta:
@@ -117,7 +124,7 @@ class CategoryType(DjangoObjectType):
         model = Category
 
 
-class AddCrashListMutation(graphene.Mutation):
+class CrashElementMutationAdd(graphene.Mutation):
     class Arguments:
         machine_id = graphene.Int()
         # dt_start = graphene.DateTime()
@@ -146,7 +153,30 @@ class AddCrashListMutation(graphene.Mutation):
         crash.services.set(services)
         # crash.text = text
         crash.save()
-        return AddCrashListMutation(crash=crash)
+        return CrashElementMutationAdd(crash=crash)
+
+
+class CrashElementMutationEdit(graphene.Mutation):
+    class Arguments:
+        crash_id = graphene.Int()
+        finish = graphene.Boolean()
+        text2 = graphene.String()
+
+    crash = graphene.Field(CrashListType)
+
+    def mutate(self, info, **kwargs):
+        crash_id = kwargs.get('crash_id')
+        finish = kwargs.get('finish')
+        text2 = kwargs.get('text2')
+        if finish:
+            crash = CrashList.objects.get(pk=crash_id)
+            dt_stop = timezone.now()
+            day = Day.objects.get_or_create(day=dt_stop.date())[0]
+            crash.day_stop = day
+            crash.time_stop = dt_stop.time()
+            crash.save()
+            return CrashElementMutationEdit(crash=crash)
+        return None
 
 
 class AddStopTimeListMutation(graphene.Mutation):
@@ -192,6 +222,7 @@ class Query(object):
     machines = graphene.List(MachineType)
     machine = graphene.Field(MachineType, pk=graphene.Int())
     stop_time_list = graphene.Field(StopTimeListType, pk=graphene.Int())
+    crash_element = graphene.Field(CrashListType, pk=graphene.Int())
     values = graphene.List(ValueType)
 
     # values_in_machine = graphene.List(ValueType, pk=graphene.Int())
@@ -228,7 +259,12 @@ class Query(object):
         pk = kwargs.get('pk')
         return StopTimeList.objects.get(pk=pk)
 
+    def resolve_crash_element(self, info, **kwargs):
+        pk = kwargs.get('pk')
+        return CrashList.objects.get(pk=pk)
+
 
 class Mutation(graphene.ObjectType):
-    add_crash = AddCrashListMutation.Field()
+    crash_element_add = CrashElementMutationAdd.Field()
+    crash_element_edit = CrashElementMutationEdit.Field()
     add_stop_time = AddStopTimeListMutation.Field()

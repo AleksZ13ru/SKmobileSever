@@ -137,6 +137,26 @@ class CrashList(models.Model):
     status = models.CharField(blank=True, max_length=200)
     comment = models.TextField(blank=True)
 
+    def create_delta_time(self):
+        d_start = date(self.day_start.day.year, self.day_start.day.month, self.day_start.day.day)
+        t_start = time(self.time_start.hour, self.time_start.minute)
+        dt_start = datetime.combine(d_start, t_start)
+        if self.day_stop is None or self.time_stop is None:
+            return 0
+        else:
+            d_stop = date(self.day_stop.day.year, self.day_stop.day.month, self.day_stop.day.day)
+            t_stop = time(self.time_stop.hour, self.time_stop.minute)
+            dt_stop = datetime.combine(d_stop, t_stop)
+        return (dt_stop - dt_start).total_seconds() / 3600
+
+    @staticmethod
+    def in_work(service_id=None):
+        if service_id is None:
+            crash = CrashList.objects.filter(time_stop=None)
+        else:
+            crash = CrashList.objects.filter(time_stop=None, servicecrashlist__service_id=service_id)
+        return len(crash)
+
     def __str__(self):
         day_stop = '?'
         if self.day_stop is not None:

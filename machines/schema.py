@@ -9,6 +9,14 @@ from .type_scheme.crash_list_type import CrashListType, CrashList
 from .type_scheme.service_name_type import ServiceNameType, ServiceName
 
 
+class StatisticType(graphene.ObjectType):
+    crash_in_work = graphene.Int()
+
+    def resolve_crash_in_work(self, info, **kwargs):
+        # service_id = kwargs.get('service_id')
+        return CrashList.in_work()
+
+
 class ValueType(DjangoObjectType):
     class Meta:
         model = Value
@@ -223,6 +231,7 @@ class Query(object):
     machine = graphene.Field(MachineType, pk=graphene.Int())
     stop_time_list = graphene.Field(StopTimeListType, pk=graphene.Int())
     crash_element = graphene.Field(CrashListType, pk=graphene.Int())
+    statistic = graphene.Field(StatisticType, service_id=graphene.Int(required=False))
     values = graphene.List(ValueType)
 
     # values_in_machine = graphene.List(ValueType, pk=graphene.Int())
@@ -262,6 +271,10 @@ class Query(object):
     def resolve_crash_element(self, info, **kwargs):
         pk = kwargs.get('pk')
         return CrashList.objects.get(pk=pk)
+
+    def resolve_statistic(self, info, **kwargs):
+        service_id = kwargs.get('service_id')
+        return StatisticType()
 
 
 class Mutation(graphene.ObjectType):

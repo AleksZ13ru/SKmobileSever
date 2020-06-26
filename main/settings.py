@@ -1,5 +1,5 @@
 import os
-
+import datetime
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -17,7 +17,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'channels',
+    # 'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'graphene_django',
-    'graphene_subscriptions',
+    # 'graphene_subscriptions',
     'machines',
 ]
 
@@ -66,11 +66,11 @@ WSGI_APPLICATION = 'main.wsgi.application'
 ASGI_APPLICATION = 'main.routing.application'
 
 # CHANNELS_WS_PROTOCOLS = ["graphql-ws", ]
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
-}
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels.layers.InMemoryChannelLayer"
+#     }
+# }
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -117,6 +117,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# JWT_AUTH = {
+    # 'JWT_VERIFY': True,
+    # 'JWT_VERIFY_EXPIRATION': True,
+    # 'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
+    # 'JWT_AUTH_HEADER_PREFIX': 'JWT',
+# }
 
 GRAPHENE = {
     'SCHEMA': 'main.schema.schema',

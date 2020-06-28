@@ -1,6 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
 from django.utils import timezone
+from graphql_jwt.decorators import login_required
 
 from .models import Location, Category, Machine, Value, Day, ToDoList, CrashList
 from .type_scheme.stop_time_list_type import StopTimeListType, StopTimeList
@@ -238,22 +239,28 @@ class Query(object):
 
     # stop_time_lists = graphene.List(StopTimeListType)
 
+    @login_required
     def resolve_days(self, info, **kwargs):
         return Day.objects.all()
 
+    @login_required
     def resolve_locations(self, info, **kwargs):
         return Location.objects.all()
 
+    @login_required
     def resolve_category(self, info, **kwargs):
         return Category.objects.all()
 
+    @login_required
     def resolve_machines(self, info, **kwargs):
         return Machine.objects.all()
 
+    @login_required
     def resolve_machine(self, info, **kwargs):
         pk = kwargs.get('pk')
         return Machine.objects.get(pk=pk)
 
+    @login_required
     def resolve_values(self, info, **kwargs):
         return Value.objects.all()
 
@@ -261,17 +268,21 @@ class Query(object):
     #     pk = kwargs.get('pk')
     #     return Value.objects.filter(machine_id=pk)
 
+    @login_required
     def resolve_stop_time_lists(self, info, **kwargs):
         return StopTimeList.objects.all()
 
+    @login_required
     def resolve_stop_time_list(self, info, **kwargs):
         pk = kwargs.get('pk')
         return StopTimeList.objects.get(pk=pk)
 
+    @login_required
     def resolve_crash_element(self, info, **kwargs):
         pk = kwargs.get('pk')
         return CrashList.objects.get(pk=pk)
 
+    @login_required
     def resolve_statistic(self, info, **kwargs):
         service_id = kwargs.get('service_id')
         return StatisticType()

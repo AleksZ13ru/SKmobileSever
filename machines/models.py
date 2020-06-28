@@ -1,5 +1,7 @@
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from datetime import datetime, date, time, timedelta
 import json
 
@@ -120,6 +122,23 @@ class Value(models.Model):
         return length
 
 
+class Message(models.Model):
+    class Meta:
+        verbose_name = "Сообщение"
+        verbose_name_plural = "Сообщения"
+
+    class Code(models.TextChoices):
+        START = 'STR', _('Start')
+        MESSAGE = 'MSG', _('Message')
+        FINISH = 'FNS', _('Finish')
+
+    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)
+    crash_list = models.ForeignKey('CrashList', related_name='crash_list_messages', on_delete=models.CASCADE, null=True)
+    text = models.TextField(default='')
+    code = models.CharField(max_length=3, choices=Code.choices, default=Code.MESSAGE)
+    dt_create = models.DateTimeField(auto_now_add=True)
+
+
 class CrashList(models.Model):
     # Вызов персонала на ремонт
     # todo: 1. Обработать ситуацию: вызваны 2 службы, причина поломки имеет отнашение к 1(или другой службе)
@@ -136,6 +155,7 @@ class CrashList(models.Model):
     text = models.TextField()
     status = models.CharField(blank=True, max_length=200)
     comment = models.TextField(blank=True)
+
 
     def create_delta_time(self):
         d_start = date(self.day_start.day.year, self.day_start.day.month, self.day_start.day.day)

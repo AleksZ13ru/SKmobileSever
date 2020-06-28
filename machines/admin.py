@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Category, Location, Machine, Value, StopTimeList, ToDoList, CrashList, ServiceName, \
-    ServiceStopTimeList, ServiceToDoList, Day, ServiceCrashList
+    ServiceStopTimeList, ServiceToDoList, Day, ServiceCrashList, Message
 
 
 class ServiceStopTimeListInline(admin.TabularInline):
@@ -44,9 +44,10 @@ admin.site.register(Location)
 admin.site.register(Category)
 admin.site.register(Machine)
 admin.site.register(Value)
+admin.site.register(Message)
 admin.site.register(Day, DayAdmin)
 admin.site.register(StopTimeList, StopTimeListAdmin)
-admin.site.register(ServiceStopTimeList)
+# admin.site.register(ServiceStopTimeList)
 admin.site.register(ToDoList, ToDoListAdmin)
 admin.site.register(CrashList, CrashListAdmin)
 admin.site.register(ServiceName)

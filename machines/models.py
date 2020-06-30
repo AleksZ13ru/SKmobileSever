@@ -136,6 +136,7 @@ class Message(models.Model):
     crash_list = models.ForeignKey('CrashList', related_name='crash_list_messages', on_delete=models.CASCADE, null=True)
     text = models.TextField(default='')
     code = models.CharField(max_length=3, choices=Code.choices, default=Code.MESSAGE)
+    do_not_agree = models.BooleanField(default=False)  # не согласен с вызовом
     dt_create = models.DateTimeField(auto_now_add=True)
 
 

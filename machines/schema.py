@@ -3,7 +3,7 @@ from graphene_django import DjangoObjectType
 from django.utils import timezone
 from graphql_jwt.decorators import login_required
 
-from .models import Location, Category, Machine, Value, Day, ToDoList, CrashList
+from .models import Location, Category, Machine, Value, Day, ToDoList, CrashList, Message
 from .type_scheme.stop_time_list_type import StopTimeListType, StopTimeList
 from .type_scheme.todo_list_type import ToDoListType, ToDoList
 from .type_scheme.crash_list_type import CrashListType, CrashList
@@ -143,6 +143,7 @@ class CrashElementMutationAdd(graphene.Mutation):
     crash = graphene.Field(CrashListType)
 
     def mutate(self, info, machine_id, services_id, text):
+        user = info.context.user or None
         # {"machineId": 1, "dtStart": "2020-05-29T00:00:00Z", "servicesID": [1, 2], "text": "Hello"}
         # if dt_start is None:
         dt_start = timezone.now()
@@ -162,6 +163,13 @@ class CrashElementMutationAdd(graphene.Mutation):
         crash.services.set(services)
         # crash.text = text
         crash.save()
+        message = Message.objects.create(
+            posted_by=user,
+            crash_list=crash,
+            text=text,
+            code=Message.Code.START
+        )
+        message.save()
         return CrashElementMutationAdd(crash=crash)
 
 
@@ -169,23 +177,35 @@ class CrashElementMutationEdit(graphene.Mutation):
     class Arguments:
         crash_id = graphene.Int()
         finish = graphene.Boolean()
-        text2 = graphene.String()
+        do_not_agree = graphene.Boolean()
+        text = graphene.String()
 
     crash = graphene.Field(CrashListType)
 
     def mutate(self, info, **kwargs):
+        user = info.context.user or None
         crash_id = kwargs.get('crash_id')
         finish = kwargs.get('finish')
-        text2 = kwargs.get('text2')
+        do_not_agree = kwargs.get('do_not_agree')
+        text = kwargs.get('text')
+        crash = CrashList.objects.get(pk=crash_id)
+        message = Message.objects.create(
+            posted_by=user,
+            crash_list=crash,
+            do_not_agree=do_not_agree,
+            text=text,
+            code=Message.Code.MESSAGE
+        )
         if finish:
             crash = CrashList.objects.get(pk=crash_id)
             dt_stop = timezone.now()
             day = Day.objects.get_or_create(day=dt_stop.date())[0]
             crash.day_stop = day
             crash.time_stop = dt_stop.time()
-            crash.save()
-            return CrashElementMutationEdit(crash=crash)
-        return None
+            message.code = Message.Code.FINISH
+        crash.save()
+        message.save()
+        return CrashElementMutationEdit(crash=crash)
 
 
 class AddStopTimeListMutation(graphene.Mutation):

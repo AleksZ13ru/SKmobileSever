@@ -178,6 +178,7 @@ class CrashElementMutationEdit(graphene.Mutation):
         crash_id = graphene.Int()
         finish = graphene.Boolean()
         do_not_agree = graphene.Boolean()
+        rewrite = graphene.Boolean()
         text = graphene.String()
 
     crash = graphene.Field(CrashListType)
@@ -185,8 +186,9 @@ class CrashElementMutationEdit(graphene.Mutation):
     def mutate(self, info, **kwargs):
         user = info.context.user or None
         crash_id = kwargs.get('crash_id')
-        finish = kwargs.get('finish')
-        do_not_agree = kwargs.get('do_not_agree')
+        finish = kwargs.get('finish') or False
+        rewrite = kwargs.get('rewrite') or False
+        do_not_agree = kwargs.get('do_not_agree') or False
         text = kwargs.get('text')
         crash = CrashList.objects.get(pk=crash_id)
         message = Message.objects.create(
@@ -203,6 +205,10 @@ class CrashElementMutationEdit(graphene.Mutation):
             crash.day_stop = day
             crash.time_stop = dt_stop.time()
             message.code = Message.Code.FINISH
+        if rewrite:
+            crash.time_stop = None
+            crash.day_stop = None
+            message.code = Message.Code.START
         crash.save()
         message.save()
         return CrashElementMutationEdit(crash=crash)

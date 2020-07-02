@@ -139,6 +139,8 @@ class Message(models.Model):
     do_not_agree = models.BooleanField(default=False)  # не согласен с вызовом
     dt_create = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.text
 
 class CrashList(models.Model):
     # Вызов персонала на ремонт

@@ -142,6 +142,7 @@ class Message(models.Model):
     def __str__(self):
         return self.text
 
+
 class CrashList(models.Model):
     # Вызов персонала на ремонт
     # todo: 1. Обработать ситуацию: вызваны 2 службы, причина поломки имеет отнашение к 1(или другой службе)
@@ -158,7 +159,6 @@ class CrashList(models.Model):
     text = models.TextField()
     status = models.CharField(blank=True, max_length=200)
     comment = models.TextField(blank=True)
-
 
     def create_delta_time(self):
         d_start = date(self.day_start.day.year, self.day_start.day.month, self.day_start.day.day)

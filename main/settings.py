@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'graphene_django',
     # 'graphene_subscriptions',
     'machines',
+    'massmeters',
 ]
 
 MIDDLEWARE = [

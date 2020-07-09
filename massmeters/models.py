@@ -27,16 +27,23 @@ class Document(models.Model):
 
 
 class Status(models.Model):
+    class Meta:
+        verbose_name = "Статус"
+        verbose_name_plural = "Статусы"
+
     class Code(models.TextChoices):
-        DFL = 'FLR', _('Не установлены')  # Default
-        WRK = 'CRN', _('В рабочем состоянии')  # Work
-        TMF = 'FLR', _('Поверка просрочена')  # Time Off
+        DFL = 'DFL', _('Не установлены')  # Default
+        WRK = 'WRK', _('В рабочем состоянии')  # Work
+        TMF = 'TMF', _('Поверка просрочена')  # Time Off
         LUP = 'LUP', _('Превышен предел погрешности')  # Limit Up
-        FLS = 'CRN', _('Не исправны')  # False
+        FLS = 'FLS', _('Не исправны')  # False
 
     mass_meter = models.ForeignKey('MassMeter', related_name='mass_meter_status', on_delete=models.CASCADE, null=True)
     dt_create = models.DateTimeField(auto_now_add=True)
     code = models.CharField(max_length=3, choices=Code.choices, default=Code.DFL)
+
+    def __str__(self):
+        return "%s: %s" % (self.mass_meter, self.code)
 
 
 class MassMeter(models.Model):
@@ -49,13 +56,14 @@ class MassMeter(models.Model):
         CRN = 'CRN', _('Крановые')  # Crane
 
     name = models.CharField(max_length=120, blank=True)
+    sn = models.CharField(max_length=50, blank=True)
     type = models.CharField(max_length=3, choices=Type.choices, default=Type.FLR)
     limit = models.FloatField()  # предел взвешивания
     measurement_error = models.FloatField()  # погрешность измерения
     document = models.OneToOneField(Document, on_delete=models.CASCADE, primary_key=True, )
 
     def __str__(self):
-        return "Весы (тип) до %d - $s" % (self.limit, self.name)
+        return "Весы %s (тип) до %.0f кг %s №%s" % (self.type, self.limit, self.name, self.sn)
 
 
 class Event(models.Model):
@@ -70,6 +78,9 @@ class Event(models.Model):
     mass_object = models.FloatField()  # известный вес
     mass_indication = models.FloatField()  # показания весов
     dt_create = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "%s: %s - %.0f кг" % (self.mass_meter, self.object, self.mass_indication)
 
 
 class Crash(models.Model):
@@ -119,7 +130,7 @@ class Message(models.Model):
         MESSAGE = 'MSG', _('Message')
         FINISH = 'FNS', _('Finish')
 
-    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)
+    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='mass_meter_crash_message_posted_by', null=True, on_delete=models.CASCADE)
     crash_list = models.ForeignKey('Crash', related_name='crash_messages', on_delete=models.CASCADE, null=True)
     text = models.TextField(default='')
     code = models.CharField(max_length=3, choices=Code.choices, default=Code.MESSAGE)

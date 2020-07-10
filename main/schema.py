@@ -6,13 +6,11 @@ from datetime import datetime
 
 import users.schema
 import machines.schema
+import massmeters.schema
 
 
-class Query(users.schema.Query, machines.schema.Query, graphene.ObjectType):
-    hello = graphene.String()
-
-    def resolve_hello(root, info):
-        return 'Hello, world!'
+class Query(users.schema.Query, machines.schema.Query, massmeters.schema.Query, graphene.ObjectType):
+    pass
 
 
 class Subscription(graphene.ObjectType):
@@ -48,4 +46,3 @@ class Mutation(users.schema.Mutation, machines.schema.Mutation, graphene.ObjectT
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
 
-# SCHEMA = graphene.Schema(query=Query, subscription=Subscription)

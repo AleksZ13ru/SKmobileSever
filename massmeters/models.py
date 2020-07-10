@@ -13,13 +13,19 @@ DB_TIME_FORMAT = "%H:%M"
 
 class Document(models.Model):
     class Meta:
-        verbose_name = "Свидетельства о поверке"
+        verbose_name = "Свидетельство о поверке"
         verbose_name_plural = "Свидетельства о поверке"
 
+    class Status(models.TextChoices):
+        DFL = 'DFL', _('Черновик')  # Default
+        ACT = 'ACT', _('Действующее')  # Actual
+        HST = 'HST', _('Архив')  # History
+
+    mass_meter = models.ForeignKey('MassMeter', related_name='mass_meter_document', on_delete=models.CASCADE, null=True)
     number = models.CharField(max_length=120)
     date_create = models.DateField()  # дата создания
     date_expiration = models.DateField()  # дата окончания
-
+    status = models.CharField(max_length=3, choices=Status.choices, default=Status.DFL)
     # file = models.FileField()
 
     def __str__(self):
@@ -51,19 +57,18 @@ class MassMeter(models.Model):
         verbose_name = "Весы"
         verbose_name_plural = "Весы"
 
-    class Type(models.TextChoices):
+    class Execution(models.TextChoices):
         FLR = 'FLR', _('Напольные')  # Floor
         CRN = 'CRN', _('Крановые')  # Crane
 
     name = models.CharField(max_length=120, blank=True)
     sn = models.CharField(max_length=50, blank=True)
-    type = models.CharField(max_length=3, choices=Type.choices, default=Type.FLR)
+    execution = models.CharField(max_length=3, choices=Execution.choices, default=Execution.FLR)
     limit = models.FloatField()  # предел взвешивания
     measurement_error = models.FloatField()  # погрешность измерения
-    document = models.OneToOneField(Document, on_delete=models.CASCADE, primary_key=True, )
 
     def __str__(self):
-        return "Весы %s (тип) до %.0f кг %s №%s" % (self.type, self.limit, self.name, self.sn)
+        return "Весы %s (тип) до %.0f кг %s №%s" % (self.execution, self.limit, self.name, self.sn)
 
 
 class Event(models.Model):
@@ -84,8 +89,6 @@ class Event(models.Model):
 
 
 class Crash(models.Model):
-    # Вызов персонала на ремонт
-    # todo: 1. Обработать ситуацию: вызваны 2 службы, причина поломки имеет отнашение к 1(или другой службе)
     class Meta:
         verbose_name = "Поломка"
         verbose_name_plural = "Поломки"

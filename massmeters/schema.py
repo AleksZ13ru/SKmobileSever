@@ -1,7 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
 from django.utils import timezone
-from graphql_jwt.decorators import login_required
+# from graphql_jwt.decorators import login_required
 
 from .models import MassMeter, Document, Status, Event, Crash, Message
 
@@ -55,12 +55,14 @@ class CrashMutationAdd(graphene.Mutation):
 
     crash = graphene.Field(CrashType)
 
-    def mutate(self, info, mass_meter_id, text):
+    def mutate(self, info, **kwargs):
+        mass_meter_id = kwargs.get('mass_meter_id')
+        text = kwargs.get('text')
         user = info.context.user or None
         dt_start = timezone.now()
-
+        mass_meter = MassMeter.objects.get(pk=mass_meter_id)
         crash = Crash.objects.create(
-            mass_meter_id=mass_meter_id,
+            mass_meter=mass_meter,
             dt_start=dt_start,
             text=text
         )
@@ -113,6 +115,40 @@ class CrashMutationEdit(graphene.Mutation):
         return CrashMutationEdit(crash=crash)
 
 
+class EventMutationAdd(graphene.Mutation):
+    class Arguments:
+        mass_meter_id = graphene.Int()
+        object = graphene.String()
+        mass_object = graphene.Int()
+        mass_indication = graphene.Int()
+
+    event = graphene.Field(EventType)
+
+    def mutate(self, info, **kwargs):
+        mass_meter_id = kwargs.get('mass_meter_id')
+        obj = kwargs.get('object')
+        mass_object = kwargs.get('mass_object')
+        mass_indicator = kwargs.get('mass_indicator')
+        user = info.context.user or None
+        mass_meter = MassMeter.objects.get(pk=mass_meter_id)
+        event = Event.objects.create(
+            posted_by=user,
+            mass_meter=mass_meter,
+            object=obj,
+            mass_object=mass_object,
+            mass_indication=mass_indicator
+        )
+        event.save()
+        # message = Message.objects.create(
+        #     posted_by=user,
+        #     crash_list=crash,
+        #     text=text,
+        #     code=Message.Code.START
+        # )
+        # message.save()
+        return EventMutationAdd(event=event)
+
+
 class Query(object):
     mass_meters = graphene.List(MassMeterType)
     mass_meter = graphene.Field(MassMeterType, pk=graphene.Int())
@@ -126,6 +162,6 @@ class Query(object):
 
 
 class Mutation(graphene.ObjectType):
-    crash_add = CrashMutationAdd.Field()
-    crash__edit = CrashMutationEdit.Field()
-    event_add = AddStopTimeListMutation.Field()
+    mass_crash_add = CrashMutationAdd.Field()
+    mass_crash_edit = CrashMutationEdit.Field()
+    mass_event_add = EventMutationAdd.Field()

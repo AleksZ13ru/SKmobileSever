@@ -42,7 +42,7 @@ class MassMeterType(DjangoObjectType):
         return Status.objects.filter(mass_meter=self).last() or None
 
     def resolve_events(self, info):
-        return Event.objects.filter(mass_meter=self) or None
+        return Event.objects.filter(mass_meter=self) or []
 
     def resolve_accident(self, info):
         return Crash.objects.filter(mass_meter=self) or None

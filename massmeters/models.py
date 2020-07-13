@@ -1,9 +1,12 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from datetime import datetime, date, time, timedelta
 import json
+from .consumers import ChatConsumer
 
 DB_DATETIME_FORMAT = '%d/%b/%Y %H:%M:%S'
 DB_DATE_FORMAT = '%d/%b/%Y'
@@ -80,7 +83,7 @@ class Event(models.Model):
     mass_meter = models.ForeignKey('MassMeter', related_name='mass_meter_events', on_delete=models.CASCADE, null=True)
     object = models.CharField(
         max_length=120)  # нужно будет привязать каталог обектов взвешивания: Полуфабрикат, Тара, Контрольный груз
-    mass_object = models.FloatField()  # известный вес
+    mass_object = models.FloatField(null=True, blank=True)  # известный вес
     mass_indication = models.FloatField()  # показания весов
     dt_create = models.DateTimeField(auto_now_add=True)
 
@@ -141,3 +144,10 @@ class Message(models.Model):
 
     def __str__(self):
         return self.text
+
+
+@receiver(post_save, sender=Event)
+def event_save_callback(sender, **kwargs):
+    ch = ChatConsumer
+    ch.receive(ch, text_data='112')
+    print(timezone.now())

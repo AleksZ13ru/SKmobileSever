@@ -127,8 +127,8 @@ class EventMutationAdd(graphene.Mutation):
     def mutate(self, info, **kwargs):
         mass_meter_id = kwargs.get('mass_meter_id')
         obj = kwargs.get('object')
-        mass_object = kwargs.get('mass_object')
-        mass_indicator = kwargs.get('mass_indicator')
+        mass_object = kwargs.get('mass_object') or None
+        mass_indication = kwargs.get('mass_indication')
         user = info.context.user or None
         mass_meter = MassMeter.objects.get(pk=mass_meter_id)
         event = Event.objects.create(
@@ -136,7 +136,7 @@ class EventMutationAdd(graphene.Mutation):
             mass_meter=mass_meter,
             object=obj,
             mass_object=mass_object,
-            mass_indication=mass_indicator
+            mass_indication=mass_indication
         )
         event.save()
         # message = Message.objects.create(

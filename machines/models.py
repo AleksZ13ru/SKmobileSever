@@ -4,6 +4,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from datetime import datetime, date, time, timedelta
 import json
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from subscribe.consumers import ChatSubscribe
 
 DB_DATETIME_FORMAT = '%d/%b/%Y %H:%M:%S'
 DB_DATE_FORMAT = '%d/%b/%Y'
@@ -287,3 +290,19 @@ class ServiceToDoList(models.Model):
 class ServiceCrashList(models.Model):
     crash_list = models.ForeignKey(CrashList, on_delete=models.CASCADE)
     service = models.ForeignKey(ServiceName, on_delete=models.CASCADE)
+
+
+@receiver(post_save, sender=Machine)
+def event_save_callback(sender, **kwargs):
+    room_name = 'machine'
+    message = {'machineLastUpdate': timezone.now().strftime("%m%d%Y%H%M%S")}
+    ChatSubscribe.send_message(room_name=room_name, message=message)
+    print(timezone.now())
+
+
+@receiver(post_save, sender=Message)
+def event_save_callback(sender, **kwargs):
+    room_name = 'machine'
+    message = {'machineLastUpdate': timezone.now().strftime("%m%d%Y%H%M%S")}
+    ChatSubscribe.send_message(room_name=room_name, message=message)
+    print(timezone.now())

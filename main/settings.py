@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     # 'graphene_subscriptions',
     'machines',
     'massmeters',
+    'subscribe'
 ]
 
 MIDDLEWARE = [

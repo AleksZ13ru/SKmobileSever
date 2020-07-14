@@ -1,5 +1,8 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.layers import get_channel_layer
+from django.utils import timezone
+from asgiref.sync import async_to_sync
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -44,3 +47,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
+
+
+class ChatSubscribe:
+
+    @staticmethod
+    def send_message(room_name, message):
+        # room_name = 'mass_meter'
+        group_name = 'chat_%s' % room_name
+        channel_layer = get_channel_layer()
+        # message = {'massMeterLastUpdate': timezone.now().strftime("%m%d%Y%H%M%S")}
+        async_to_sync(channel_layer.group_send)(group_name, {'type': 'chat_message', 'message': message})
+        print(timezone.now())

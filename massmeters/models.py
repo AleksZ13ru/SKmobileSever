@@ -4,9 +4,7 @@ from django.dispatch import receiver
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from datetime import datetime, date, time, timedelta
-import json
-from .consumers import ChatConsumer
+from subscribe.consumers import ChatSubscribe
 
 DB_DATETIME_FORMAT = '%d/%b/%Y %H:%M:%S'
 DB_DATE_FORMAT = '%d/%b/%Y'
@@ -29,6 +27,7 @@ class Document(models.Model):
     date_create = models.DateField()  # дата создания
     date_expiration = models.DateField()  # дата окончания
     status = models.CharField(max_length=3, choices=Status.choices, default=Status.DFL)
+
     # file = models.FileField()
 
     def __str__(self):
@@ -136,7 +135,8 @@ class Message(models.Model):
         MESSAGE = 'MSG', _('Message')
         FINISH = 'FNS', _('Finish')
 
-    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='mass_meter_crash_message_posted_by', null=True, on_delete=models.CASCADE)
+    posted_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='mass_meter_crash_message_posted_by',
+                                  null=True, on_delete=models.CASCADE)
     crash_list = models.ForeignKey('Crash', related_name='crash_messages', on_delete=models.CASCADE, null=True)
     text = models.TextField(default='')
     code = models.CharField(max_length=3, choices=Code.choices, default=Code.MESSAGE)
@@ -148,6 +148,6 @@ class Message(models.Model):
 
 @receiver(post_save, sender=Event)
 def event_save_callback(sender, **kwargs):
-    ch = ChatConsumer
-    ch.receive(ch, text_data='112')
-    print(timezone.now())
+    room_name = 'mass_meter'
+    message = {'massMeterLastUpdate': timezone.now().strftime("%m%d%Y%H%M%S")}
+    ChatSubscribe.send_message(room_name=room_name, message=message)
